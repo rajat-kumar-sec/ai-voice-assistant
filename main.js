@@ -32,8 +32,8 @@ const MODELS = {
   fast: {
     label: 'FAST · SmolLM2-360M',
     id: 'onnx-community/SmolLM2-360M-Instruct-ONNX',
-    dtype: 'q4f16',
-    note: 'Tez, halka (~272MB), phone par stable',
+    dtype: 'q4',
+    note: 'Tez, halka (~386MB), phone par stable',
   },
 };
 // PHONIC FIX: phone par sirf FAST model chalta hai.
