@@ -56,11 +56,19 @@ const camera = new THREE.PerspectiveCamera(45, innerWidth / innerHeight, 0.1, 10
 camera.position.set(0, 1.1, 7);
 camera.lookAt(0, 1.2, 0);
 
-const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+let webglOK = true;
+let renderer = null;
+try {
+  renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+  let pixelCap = devicePixelRatio && devicePixelRatio > 1 ? 1.25 : 1;
+  renderer.setSize(innerWidth, innerHeight);
+  renderer.setPixelRatio(Math.min(devicePixelRatio || 1, isMobile ? 1 : 1.5));
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+} catch (e) {
+  webglOK = false;
+  console.warn('NOVA: WebGL unavailable, running 2D fallback', e);
+}
 let pixelCap = 1.5;
-renderer.setSize(innerWidth, innerHeight);
-renderer.setPixelRatio(Math.min(devicePixelRatio || 1, pixelCap));
-renderer.toneMapping = THREE.ACESFilmicToneMapping;
 
 let lowPerf = isMobile;   // mobile phones get light rendering by default
 let starCount = isMobile ? 350 : 800;
@@ -180,6 +188,7 @@ let frameCount = 0, fpsTimer = 0;
 
 function animate() {
   requestAnimationFrame(animate);
+  if (!webglOK) return;
   const t = clock.getElapsedTime();
   const dt = clock.getDelta();
 
@@ -442,6 +451,20 @@ modeBtn.addEventListener('click', () => {
 });
 
 // ============================================================
+//  GLOBAL FALLBACK: page band na ho, friendly message dikhe
+// ============================================================
+addEventListener('error', e => {
+  try {
+    setStatus('⚠ PROBLEM: ' + String(e.message || '').slice(0, 60), 'downloading');
+  } catch (err) {}
+});
+addEventListener('unhandledrejection', e => {
+  try {
+    setStatus('⚠ PROBLEM: ' + String(e.reason && e.reason.message || e.reason || '').slice(0, 60), 'downloading');
+  } catch (err) {}
+});
+
+// ============================================================
 //  UI
 // ============================================================
 micBtn.addEventListener('click', startListening);
@@ -452,6 +475,7 @@ chatClose.addEventListener('click', () => chatLog.closest('.chat-panel').classLi
 robotName.addEventListener('click', () => chatLog.closest('.chat-panel').classList.remove('hidden'));
 
 addEventListener('resize', () => {
+  if (!webglOK) return;
   camera.aspect = innerWidth / innerHeight;
   camera.updateProjectionMatrix();
   renderer.setSize(innerWidth, innerHeight);
