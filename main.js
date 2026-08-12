@@ -31,8 +31,9 @@ const MODELS = {
   },
   fast: {
     label: 'FAST · SmolLM2-360M',
-    id: 'onnx-community/SmolLM2-360M-Instruct',
-    note: 'Tez, halka (~180MB), phone par stable',
+    id: 'onnx-community/SmolLM2-360M-Instruct-ONNX',
+    dtype: 'q4f16',
+    note: 'Tez, halka (~272MB), phone par stable',
   },
 };
 // PHONIC FIX: phone par sirf FAST model chalta hai.
@@ -286,7 +287,7 @@ async function loadModel() {
   loadMsg.textContent = 'Downloading · ' + model.note;
   try {
     generator = await pipeline('text-generation', model.id, {
-      dtype: 'q4',
+      dtype: model.dtype || 'q4',
       progress_callback: (data) => {
         try {
           if (!data) return;
@@ -311,7 +312,9 @@ async function loadModel() {
   } catch (e) {
     console.error(e);
     setStatus('❌ Neural core load failed', 'downloading');
-    loadMsg.textContent = 'Failed: ' + e.message + '. Refresh & check internet.';
+    loadMsg.textContent =
+      'Model download fail: ' + String(e && e.message || e).slice(0, 160) +
+      '. Internet ON rakhein & page dobara kholen.';
   }
 }
 
