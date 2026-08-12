@@ -235,8 +235,39 @@ async function loadModel() {
   setStatus('AI model download/load ho raha hai (~500 MB, WiFi use karein)...', 'downloading');
   showBubble('Pahli baar: AI model load ho raha hai. Ye sirf ek baar hoga.');
   try {
+    const MB = 1024 * 1024;
+    let modelTotal = 0, modelLoaded = 0;
+
     generator = await pipeline('text-generation', 'onnx-community/Qwen2.5-0.5B-Instruct', {
       dtype: 'q4',
+      progress_callback: (data) => {
+        // transformers.js v3: data = { status, file, progress: { loaded, total } }
+        try {
+          if (!data) return;
+          if (data.progress && data.progress.total) {
+            modelTotal = data.progress.total;
+            modelLoaded = data.progress.loaded;
+          } else if (typeof data.total === 'number') {
+            modelTotal = data.total;
+            modelLoaded = typeof data.loaded === 'number' ? data.loaded : 0;
+          }
+          if (data.file) {
+            let file = String(data.file).split('/').pop();
+            if (file.length > 32) file = '...' + file.slice(-29);
+            const dlMB = modelLoaded / MB;
+            const totMB = modelTotal / MB;
+            const pct = modelTotal > 0 ? Math.round((modelLoaded / modelTotal) * 100) : 0;
+            const status = data.status ? '[' + data.status + '] ' : '';
+            setStatus(
+              status + 'Downloading: ' + pct + '% (' + dlMB.toFixed(1) + '/' + totMB.toFixed(1) + ' MB)\n' + file,
+              'downloading'
+            );
+            showBubble('⬇️ Downloading: ' + pct + '% (' + dlMB.toFixed(1) + '/' + totMB.toFixed(1) + ' MB)');
+          }
+        } catch (e) {
+          console.warn('progress parse:', e);
+        }
+      },
     });
     modelReady = true;
     setStatus('✅ AI ready - Mic dabayein aur bolen', 'ready');
