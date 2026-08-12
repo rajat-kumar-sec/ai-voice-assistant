@@ -65,6 +65,30 @@ body {
   max-width: 60vw;
 }
 
+.model-btn {
+  position: fixed;
+  z-index: 12;
+  top: 68px;
+  right: 22px;
+  font-size: 11px;
+  letter-spacing: 2px;
+  font-weight: 700;
+  color: var(--cyan);
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 8px 16px;
+  cursor: pointer;
+  backdrop-filter: blur(8px);
+  transition: all 0.3s;
+}
+.model-btn:hover { box-shadow: 0 0 18px rgba(0,240,255,0.5); }
+.model-btn.fast {
+  color: #ffcf4d;
+  border-color: rgba(255,207,77,0.4);
+  box-shadow: 0 0 12px rgba(255,207,77,0.25);
+}
+
 .pip {
   width: 9px; height: 9px;
   border-radius: 50%;
