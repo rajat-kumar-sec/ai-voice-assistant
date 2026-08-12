@@ -293,38 +293,48 @@ async function askAI(userText) {
   showBubbleTyping();
   history.push({ role: 'user', content: userText });
 
-  const messages = [
-    { role: 'system', content: SYSTEM_PROMPT },
-    ...history.slice(-8),
-  ];
+  // build string prompt (Qwen chat format) - same as Android version
+  let prompt = "<|im_start|>system\n" + SYSTEM_PROMPT + "<|im_end|>\n";
+  const recent = history.slice(-8);
+  for (const msg of recent) {
+    const role = msg.role === 'user' ? 'user' : 'assistant';
+    prompt += "<|im_start|>" + role + "\n" + msg.content + "<|im_end|>\n";
+  }
+  prompt += "<|im_start|>assistant\n";
 
   try {
-    const output = await generator(messages, {
+    const output = await generator(prompt, {
       max_new_tokens: 256,
       temperature: 0.7,
       top_p: 0.95,
       do_sample: true,
     });
 
-    let text;
+    // robustly extract the generated_text as a string
+    let raw = null;
     if (Array.isArray(output)) {
-      text = output[0]?.generated_text ?? '';
-    } else if (output && output.generated_text) {
-      text = output.generated_text;
-    } else if (typeof output === 'string') {
-      text = output;
+      raw = output[0]?.generated_text;
+    } else if (output && typeof output === 'object') {
+      raw = output.generated_text ?? output.text ?? output.output_text;
     } else {
-      text = JSON.stringify(output);
+      raw = output;
     }
+    if (raw === null || raw === undefined) raw = JSON.stringify(output);
+    let text = String(raw);
 
-    // strip the echoed prompt part
-    let answer = text;
-    const lastUserIdx = answer.lastIndexOf(userText);
-    if (lastUserIdx >= 0) {
-      answer = answer.slice(lastUserIdx + userText.length).trim();
+    // take everything after the last "<|im_start|>assistant" marker
+    const marker = '<|im_start|>assistant';
+    const mIdx = text.lastIndexOf(marker);
+    let answer;
+    if (mIdx >= 0) {
+      answer = text.slice(mIdx + marker.length);
+      const endIdx = answer.search(/<\|im_end\|>|<\|endoftext\|>|<\/?s>/);
+      if (endIdx >= 0) answer = answer.slice(0, endIdx);
+    } else {
+      // fallback: strip any known markers
+      answer = text;
     }
-    // strip assistant template marker
-    answer = answer.replace(/<\|im_start\|>assistant/g, '').replace(/<\|im_end\|>/g, '').trim();
+    answer = answer.replace(/<\|im_end\|>/g, '').replace(/<\|endoftext\|>/g, '').replace(/<\|im_start\|>/g, '').trim();
 
     if (!answer) answer = 'Mujhe samajh nahi aaya, thoda aur batao.';
 
