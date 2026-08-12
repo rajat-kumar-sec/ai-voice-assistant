@@ -35,10 +35,17 @@ const MODELS = {
     note: 'Tez, halka (~180MB), phone par stable',
   },
 };
-const isMobile = /Android|iPhone|iPad|Mobile/i.test(navigator.userAgent);
-let modelKey = localStorage.getItem('nova_model') ||
-  (isMobile ? 'fast' : 'smart');
-if (!MODELS[modelKey]) modelKey = isMobile ? 'fast' : 'smart';
+// PHONIC FIX: phone par sirf FAST model chalta hai.
+// Pehle localStorage me 'smart' bacha hua tha, toh mobile par bhi 749MB download hota
+// tha -> complete ho kar memory OOM -> reload loop. Ab mobile par SMART block hai.
+const isMobile = /Android|iPhone|iPad|Mobile/i.test(navigator.userAgent) ||
+                 ((navigator.maxTouchPoints || 0) > 0 && /Mobi/i.test(navigator.userAgent)) ||
+                 (/Android|iPhone/i.test(navigator.platform || ''));
+let modelKey = isMobile ? 'fast' : (localStorage.getItem('nova_model') || 'smart');
+if (!MODELS[modelKey] || (isMobile && modelKey !== 'fast')) modelKey = isMobile ? 'fast' : 'smart';
+
+// Browser cache ko persist manayein: partial download reload ke baad resume ho, dobara 0 se na ho
+if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
 
 // ============================================================
 //  THREE.JS SCENE (performance-aware)
@@ -417,6 +424,11 @@ async function askAI(userText) {
 // ============================================================
 modeBtn.addEventListener('click', () => {
   if (isThinking || !modelReady) return;
+  if (isMobile && modelKey === 'fast') {
+    loadMsg.textContent = 'Phone par SMART model nahi — memory crash/lag hota hai. Sirf FAST available.';
+    setStatus('FAST ONLY ON PHONE', 'ready');
+    return;
+  }
   const next = modelKey === 'smart' ? 'fast' : 'smart';
   modelKey = next;
   localStorage.setItem('nova_model', modelKey);
