@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Robot - Voice Assistant</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div class="status-dot" id="statusDot"></div>
+      <span id="statusText">AI model load ho raha hai...</span>
+    </header>
+
+    <div class="stage">
+      <div class="robot" id="robot">
+        <div class="antenna">
+          <span class="antenna-light" id="antennaLight"></span>
+        </div>
+        <div class="head">
+          <div class="eye left-eye" id="leftEye">
+            <span class="pupil"></span>
+          </div>
+          <div class="eye right-eye" id="rightEye">
+            <span class="pupil"></span>
+          </div>
+          <div class="mouth-wrap">
+            <div class="mouth" id="mouth"></div>
+          </div>
+        </div>
+        <div class="body">
+          <div class="chest-core" id="chestCore"></div>
+          <div class="body-lines"></div>
+        </div>
+      </div>
+
+      <div class="speech-bubble" id="speechBubble">
+        <span id="bubbleText">Namaste! Main aapka AI assistant hoon. Mic dabayein aur bolen.</span>
+      </div>
+    </div>
+
+    <div class="chat-log" id="chatLog"></div>
+
+    <div class="controls">
+      <div class="input-row">
+        <input type="text" id="textInput" placeholder="Yahan type karein (optional)" autocomplete="off">
+        <button id="sendBtn" title="Bhejein">Send</button>
+      </div>
+      <button class="mic-btn" id="micBtn" title="Bolne ke liye dabayein">🎤</button>
+    </div>
+  </div>
+
+  <script type="module" src="main.js"></script>
+</body>
+</html>
